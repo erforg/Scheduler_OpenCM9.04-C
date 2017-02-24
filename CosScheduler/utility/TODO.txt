@@ -1,0 +1,33 @@
+TODO-List for COS
+-----------------
+
+Idee für Erweiterung: ISR gibt 'event' an eine Task.
+
+Eine ISR soll kurz sein. Längere Aufgaben soll eine Task übernehmen, die von
+der ISR aktiviert wird.
+IDEE:   Die Zustände einer Task werden anders beschrieben. Es gibt Bit-Flags
+        für die verschiedenen States:
+        READY                   0x00    0000 0000
+        SUSPENDED_FLAG          0x01    0000 0001
+        BLOCKED_FLAG            0x02    0000 0010
+        WAIT_FOR_ISR_EVENT_FLAG 0x04    0000 0100
+
+Die Bits werden einzeln mit OR und AND gesetzt und gelöscht. D.h. alle
+Scheduling-Macros müssen angepasst werden.
+
+a)
+Ein neues Macro lässt eine Task blockieren und setzt das WAIT_FOR_ISR_EVENT_FLAG
+
+b)
+Ein neues Macro wird in der ISR aufgerufen und löscht das WAIT_FOR_ISR_EVENT_FLAG.
+Dazu muss der Task-Pointer in der ISR bekannt sein.
+
+
+Der Scheduler lässt nur Tasks laufen, die READ sind und deren Wartezeit
+abgelaufen ist - alos wie bisher. Die Flags sollten unerwartetes Verhalten
+minimieren: Wenn z.B. eine am Semaphor wartende Task von jemand anderem
+suspendiert wird, sollte sie nach resume() immer noch am Semaphor warten.
+
+Das neue Macro a) funktioniert ähnlich wie das Wait() beim Semaphor, aber
+hier gibt es keine Task-Liste sondern nur EINE Task, die auf EINE ISR werten
+kann.
